@@ -173,6 +173,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, [hydrated, displayName, profilePhoto, twitterHandle, discordId, totalEarned, addressRaw, privateKey]);
 
+  // Sync profile to server so other browsers can see this user's display name
+  useEffect(() => {
+    if (!hydrated || !addressRaw || !displayName) return;
+    fetch('/api/profiles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        wallet_address: addressRaw,
+        display_name: displayName,
+        profile_photo: profilePhoto,
+      }),
+    }).catch(() => {});
+  }, [hydrated, addressRaw, displayName, profilePhoto]);
+
   const refreshBalance = useCallback(async () => {
     if (!addressRaw) return;
     try {

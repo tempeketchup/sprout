@@ -60,6 +60,7 @@ export default function MainFeed({ selectedPostId, onSelectPost, searchQuery }: 
   const [rewardHydrated, setRewardHydrated] = useState(false);
   const pollCountRef = useRef<Record<string, number>>({});
   const pendingRewardsRef = useRef<Record<string, { postId: string, amount: number }>>({});
+  const [serverProfiles, setServerProfiles] = useState<Record<string, { name: string; photo: string | null }>>({});
 
   // Load persisted reward state from localStorage on mount
   useEffect(() => {
@@ -88,6 +89,20 @@ export default function MainFeed({ selectedPostId, onSelectPost, searchQuery }: 
       }));
     } catch { }
   }, [rewardHydrated, pendingReplyIds, acceptedReplyIds, replyRewards, replyTxHashes]);
+
+  // Fetch server-side profiles so other users' display names are visible
+  useEffect(() => {
+    fetch('/api/profiles')
+      .then(res => res.json())
+      .then((profiles: Array<{ wallet_address: string; display_name: string; profile_photo?: string | null }>) => {
+        const map: Record<string, { name: string; photo: string | null }> = {};
+        for (const p of profiles) {
+          map[p.wallet_address.toLowerCase()] = { name: p.display_name, photo: p.profile_photo || null };
+        }
+        setServerProfiles(map);
+      })
+      .catch(() => {});
+  }, []);
 
   const combinedReplies = [
     ...(fetchedReplies || []),
@@ -204,19 +219,29 @@ export default function MainFeed({ selectedPostId, onSelectPost, searchQuery }: 
     let name = `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
     let photo = null;
 
-    try {
-      const raw = localStorage.getItem('sprout_app_state_v2');
-      if (raw) {
-        const appState = JSON.parse(raw);
-        const keys = Object.keys(appState.profiles || {});
-        const matchKey = keys.find(k => k.toLowerCase() === walletAddress.toLowerCase());
-        if (matchKey && appState.profiles[matchKey]) {
-          const p = appState.profiles[matchKey];
-          if (p.displayName) name = p.displayName;
-          if (p.profilePhoto) photo = p.profilePhoto;
+    // Check server-side profiles first (shared across all browsers)
+    const serverProfile = serverProfiles[walletAddress.toLowerCase()];
+    if (serverProfile) {
+      name = serverProfile.name;
+      photo = serverProfile.photo;
+    }
+
+    // Fallback: check localStorage (only has current browser's profiles)
+    if (name === `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`) {
+      try {
+        const raw = localStorage.getItem('sprout_app_state_v2');
+        if (raw) {
+          const appState = JSON.parse(raw);
+          const keys = Object.keys(appState.profiles || {});
+          const matchKey = keys.find(k => k.toLowerCase() === walletAddress.toLowerCase());
+          if (matchKey && appState.profiles[matchKey]) {
+            const p = appState.profiles[matchKey];
+            if (p.displayName) name = p.displayName;
+            if (p.profilePhoto) photo = p.profilePhoto;
+          }
         }
-      }
-    } catch (e) { }
+      } catch (e) { }
+    }
 
     if (name === `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`) {
       // Find fallback in mockUsers from constants (lazy load it)

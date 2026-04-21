@@ -5,6 +5,7 @@ import { Post, Reply } from './types';
 const DATA_DIR = path.join(process.cwd(), '.data');
 const POSTS_FILE = path.join(DATA_DIR, 'posts.json');
 const REPLIES_FILE = path.join(DATA_DIR, 'replies.json');
+const PROFILES_FILE = path.join(DATA_DIR, 'profiles.json');
 
 function ensureDataDir() {
   if (!fs.existsSync(DATA_DIR)) {
@@ -106,4 +107,48 @@ export function removeReply(id: string): void {
 export function updateReply(id: string, updates: Partial<Reply>): void {
   const replies = readReplies();
   writeReplies(replies.map(r => r.id === id ? { ...r, ...updates } : r));
+}
+
+// ── Profiles ──
+
+export interface ServerProfile {
+  wallet_address: string;
+  display_name: string;
+  profile_photo?: string | null;
+}
+
+/** Read all profiles from the server-side JSON file */
+export function readProfiles(): ServerProfile[] {
+  try {
+    ensureDataDir();
+    if (!fs.existsSync(PROFILES_FILE)) return [];
+    const raw = fs.readFileSync(PROFILES_FILE, 'utf-8');
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+/** Write all profiles to the server-side JSON file */
+function writeProfiles(profiles: ServerProfile[]): void {
+  ensureDataDir();
+  fs.writeFileSync(PROFILES_FILE, JSON.stringify(profiles, null, 2), 'utf-8');
+}
+
+/** Upsert a profile by wallet address */
+export function upsertProfile(profile: ServerProfile): void {
+  const profiles = readProfiles();
+  const idx = profiles.findIndex(p => p.wallet_address.toLowerCase() === profile.wallet_address.toLowerCase());
+  if (idx >= 0) {
+    profiles[idx] = { ...profiles[idx], ...profile };
+  } else {
+    profiles.push(profile);
+  }
+  writeProfiles(profiles);
+}
+
+/** Get a profile by wallet address */
+export function getProfile(walletAddress: string): ServerProfile | null {
+  const profiles = readProfiles();
+  return profiles.find(p => p.wallet_address.toLowerCase() === walletAddress.toLowerCase()) || null;
 }
