@@ -1,0 +1,37 @@
+syntax = "proto3";
+package types;
+option go_package = "github.com/canopy-network/go-plugin/contract";
+
+// An account is a structure that holds funds and can send or receive transactions using a crypto key pair
+// Each account has a unique address and a balance, think a bank account - but managed by the blockchain
+// instead of a bank
+message Account {
+  // address: the short version of a public key
+  bytes address = 1;
+  // amount: the balance of funds the account has
+  uint64 amount = 2;
+  // NOTE: CAN EXTEND FUNCTIONALITY BY ADDING ADDITIONAL FIELDS
+}
+
+// A pool is like an account without an owner, holding funds that are managed directly by the blockchain protocol
+// It's very similar to an account but instead of an address it has a unique ID and operates based on predefined
+// blockchain rules rather than individual control
+message Pool {
+  // id: the unique identifier of the pool
+  uint64 id = 1;
+  // amount: the balance of funds the pool has
+  uint64 amount = 2;
+}
+
+// A Post is a social post created by a user
+message Post {
+  string id = 1;
+  bytes creator_address = 2; // @gotags: json:"creatorAddress"
+  string content = 3;
+  string image_url = 4; // @gotags: json:"imageUrl"
+  uint64 prize_total = 5; // @gotags: json:"prizeTotal"
+  uint64 prize_left = 6; // @gotags: json:"prizeLeft"
+  uint64 deadline = 7;
+  uint64 created_at = 8; // @gotags: json:"createdAt"
+  string status = 9;
+}
