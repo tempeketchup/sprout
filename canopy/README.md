@@ -4,7 +4,7 @@ _Official golang implementation of the Canopy Network Protocol_
 
 [![GoDoc](https://img.shields.io/badge/godoc-reference-white.svg)](https://godoc.org/github.com/canopy-network/canopy)
 [![Getting Started](https://img.shields.io/badge/getting%20started-guide-white)](https://canopynetwork.org)
-[![Go Version](https://img.shields.io/badge/golang-v1.21-white.svg)](https://golang.org)
+[![Go Version](https://img.shields.io/badge/golang-v1.24.0-white.svg)](https://golang.org)
 [![Next.js Version](https://img.shields.io/badge/next%20js-v14.2.3-white.svg)](https://nextjs.org/)
 
 
@@ -46,13 +46,32 @@ Welcome to the Canopy Network reference implementation. This repository can be w
 - [Peer-to-Peer Networking](p2p/README.md): A secure and encrypted communication system that lets nodes talk directly to each other without needing a central server.
 - [Persistence](store/README.md): Manages the blockchain’s storage — it saves the current state (ledger), indexes past transactions, and ensures fast and reliable data verification.
 
+## Prerequisites
+
+➪ Before building Canopy, ensure you have the following installed:
+
+- **Go** v1.24.0+ — [Download](https://go.dev/dl/)
+- **Node.js** v18+ and **npm** — [Download](https://nodejs.org/)
+
 ## How to Run It
 
-➪ To run the Canopy binary, use the following commands:
+➪ To build and run the Canopy binary, use the following commands:
 
 ```bash
 make build/canopy-full
 canopy start
+```
+
+> **Note:** You must use `build/canopy-full` (not `build/canopy`) to ensure the wallet and explorer
+> web apps are built before the Go binary. Running `build/canopy` alone will fail with
+> `no matching files found` because the embedded web assets have not been generated yet.
+
+➪ If you only want to build individual components:
+
+```bash
+make build/wallet      # Build the web wallet
+make build/explorer    # Build the block explorer
+make build/canopy      # Build the Go binary (requires wallet & explorer to be built first)
 ```
 
 ## How to Run It with 🐳 Docker
