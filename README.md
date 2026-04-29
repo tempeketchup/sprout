@@ -15,7 +15,7 @@ This repository is a monorepo containing both the blockchain node software and t
 To run Sprout locally, you need to run both the Canopy blockchain and the Frontend app.
 
 ### Prerequisites
-- Go 1.21+ installed (`go version`)
+- Go 1.24.0+ installed (`go version`)
 - Node.js 18+ installed (`node --version`)
 - `~/go/bin` on your PATH: add `export PATH="$PATH:$HOME/go/bin"` to your shell profile
 
@@ -24,11 +24,15 @@ From the repo root, build the canopy binary and the Go plugin:
 
 ```bash
 cd canopy
-make build/canopy
+make build/canopy-full
 cd plugin/go
 make build
 cd ../../..
 ```
+
+> **Note:** You must use `build/canopy-full` (not `build/canopy`). The full build compiles the
+> wallet and explorer web apps first, then builds the Go binary with those assets embedded.
+> Using `build/canopy` alone will fail with `no matching files found`.
 
 ### 2. First Run — Generate Config
 Run `canopy start` once to generate the config files:
