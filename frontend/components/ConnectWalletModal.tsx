@@ -30,8 +30,11 @@ export default function ConnectWalletModal({ isOpen, onClose }: ConnectWalletMod
         data = await connectWallet(nickname, password);
       }
       
-      // Update app context with wallet info (set real address, not nickname)
-      setAddress(data.address || nickname); 
+      // Always use the real hex address from the keystore response, never the nickname
+      if (!data.address) {
+        throw new Error("No wallet address returned from keystore");
+      }
+      setAddress(data.address);
       if (data.privateKey) {
         setPrivateKey(data.privateKey);
       }

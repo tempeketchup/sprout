@@ -13,7 +13,11 @@ export function toUCNPY(cnpy: number): number {
 
 // -- Admin RPC --
 
-/** Connects to an existing keystore account */
+/** Connects to an existing keystore account.
+ *  The keystore-get endpoint returns a KeyGroup: { address, publicKey, privateKey }.
+ *  We always return the resolved hex address regardless of whether the user
+ *  logged in by nickname or by address.
+ */
 export async function connectWallet(nicknameOrAddress: string, password?: string) {
   const isAddress = nicknameOrAddress.length === 40 || nicknameOrAddress.length === 42;
   const reqBody: any = { password: password || "" };
@@ -37,7 +41,22 @@ export async function connectWallet(nicknameOrAddress: string, password?: string
     } catch (e) {}
     throw new Error(errStr);
   }
-  return res.json(); // returns { address: "..." } and optionally privateKey if requested
+
+  // keystore-get returns a KeyGroup: { address: "hex", publicKey: "hex", privateKey: "hex" }
+  const keyGroup = await res.json();
+
+  // Extract the real wallet address from the KeyGroup response.
+  // This ensures we always use the actual hex address, never the nickname.
+  const resolvedAddress = keyGroup?.address || (typeof keyGroup === 'string' ? keyGroup.trim() : null);
+  if (!resolvedAddress) {
+    throw new Error("Could not resolve wallet address from keystore");
+  }
+
+  return {
+    address: resolvedAddress,
+    publicKey: keyGroup?.publicKey || null,
+    privateKey: keyGroup?.privateKey || null,
+  };
 }
 
 /** Initial funding amount for new accounts (10 CNPY) */
@@ -82,7 +101,7 @@ export async function createWallet(nickname: string, password?: string) {
     console.warn("Auto-funding new account failed (validator may need a password or insufficient balance):", e);
   }
 
-  return { address: newAddress };
+  return { address: newAddress, privateKey: null };
 }
 
 /** Sends tokens from one address to another */

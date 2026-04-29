@@ -16,7 +16,7 @@ To run Sprout locally, you need to run both the Canopy blockchain and the Fronte
 
 ### Prerequisites
 - Go 1.24.0+ installed (`go version`)
-- Node.js 18+ installed (`node --version`)
+- Node.js 20+ installed (`node --version`)
 - `~/go/bin` on your PATH: add `export PATH="$PATH:$HOME/go/bin"` to your shell profile
 
 ### 1. Build Canopy & Plugin
@@ -42,7 +42,7 @@ canopy start
 ```
 
 When prompted:
-1. **Password**: Press **Enter** (leave blank) — the validator is the system faucet account
+1. **Password**: Enter a secure password (do NOT leave blank). You will need this password to manually fund new accounts, or to log in as the validator.
 2. **Nickname**: Press **Enter** to accept the default `validator`
 
 Then press **Ctrl+C** to stop the node.
@@ -80,9 +80,21 @@ Go to [http://localhost:3000](http://localhost:3000) in your browser.
 3. Enter a **nickname** and **password** (password is required!)
 4. Click **Create Account**
 
-Your new account is automatically funded with 10 CNPY from the validator. You're ready to post, reply, and send rewards!
+Because the validator account is secured with a password, the frontend cannot automatically fund your new account. You have two options:
 
-> **Note:** The `validator` account is the system faucet (no password). You don't log in with it directly — you create your own account which gets funded from it.
+**Option A: Log in with your validator account**
+You can simply log in using the `validator` nickname and the password you set during setup.
+
+**Option B: Manually fund your new account**
+If you created a new account, you must manually send funds to it from the validator. Open a new terminal and run:
+
+```bash
+canopy admin tx-send validator <YOUR_NEW_NICKNAME> 10000000
+```
+
+*(You will be prompted for your validator password. This sends 10 CNPY to your new account).*
+
+You're now ready to post, reply, and send rewards!
 
 ## 🔌 Ports
 
