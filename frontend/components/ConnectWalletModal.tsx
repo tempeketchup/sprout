@@ -11,13 +11,13 @@ interface ConnectWalletModalProps {
 }
 
 export default function ConnectWalletModal({ isOpen, onClose }: ConnectWalletModalProps) {
-  const { setAddress, setPrivateKey } = useAppContext();
-  const [nickname, setNickname] = useState("validator");
+  const { setAddress, setPrivateKey, setSessionPassword: saveSessionPw } = useAppContext();
+  const [nickname, setNickname] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isPending, setIsPending] = useState(false);
 
-  const [isCreating, setIsCreating] = useState(false);
+  const [isCreating, setIsCreating] = useState(true);
 
   const handleAction = async () => {
     setIsPending(true);
@@ -35,6 +35,8 @@ export default function ConnectWalletModal({ isOpen, onClose }: ConnectWalletMod
       if (data.privateKey) {
         setPrivateKey(data.privateKey);
       }
+      // Store password for this session so transactions can use it
+      saveSessionPw(password);
       
       onClose();
     } catch (err: any) {
@@ -75,13 +77,15 @@ export default function ConnectWalletModal({ isOpen, onClose }: ConnectWalletMod
         {/* Form Body */}
         <div className="p-6 flex flex-col gap-4">
           <p className="text-xs text-gray-500 font-medium mb-2 leading-relaxed text-center px-4">
-            Connect to your local Canopy node via Admin RPC.
+            {isCreating
+              ? "Create a new account on your local Canopy node. You'll be funded with 10 CNPY automatically."
+              : "Connect to an existing account on your local Canopy node."}
           </p>
 
           <div className="flex flex-col gap-3">
             <input
               type="text"
-              placeholder="Address or Nickname (e.g. validator)"
+              placeholder={isCreating ? "Choose a nickname" : "Address or Nickname"}
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               className="w-full bg-emerald-50/50 border border-emerald-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"

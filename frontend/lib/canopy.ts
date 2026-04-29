@@ -40,7 +40,10 @@ export async function connectWallet(nicknameOrAddress: string, password?: string
   return res.json(); // returns { address: "..." } and optionally privateKey if requested
 }
 
-/** Creates a new keystore account */
+/** Initial funding amount for new accounts (10 CNPY) */
+const INITIAL_FUND_AMOUNT = 10_000_000;
+
+/** Creates a new keystore account and funds it from the validator */
 export async function createWallet(nickname: string, password?: string) {
   const res = await fetch(`${ADMIN_URL}/v1/admin/keystore-new-key`, {
     method: "POST",
@@ -59,7 +62,27 @@ export async function createWallet(nickname: string, password?: string) {
     throw new Error(errStr);
   }
   const addressString = await res.json();
-  return { address: addressString };
+  const newAddress = typeof addressString === 'string' ? addressString.trim() : addressString;
+
+  // Auto-fund the new account from the validator so it has tokens to work with
+  try {
+    await fetch(`${ADMIN_URL}/v1/admin/tx-send`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        address: "validator",
+        password: "",
+        output: newAddress,
+        amount: INITIAL_FUND_AMOUNT,
+        submit: true,
+      }),
+    });
+  } catch (e) {
+    // Funding is best-effort — account is still created even if this fails
+    console.warn("Auto-funding new account failed (validator may need a password or insufficient balance):", e);
+  }
+
+  return { address: newAddress };
 }
 
 /** Sends tokens from one address to another */
